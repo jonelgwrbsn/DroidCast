@@ -1,0 +1,6 @@
+{
+  "framework": "vite",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build:protocol && npm run build --workspace=@droidcast/receiver",
+  "outputDirectory": "apps/receiver/dist"
+}

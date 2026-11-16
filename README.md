@@ -88,6 +88,10 @@ npm run receiver    # Starts Vite receiver on http://localhost:5173
 
 Find your laptop's LAN IP address via `http://localhost:3000/info` or scan the **Quick Connect** QR code on the receiver home screen.
 
+### Deploying the Receiver to Vercel
+
+Import the repository into Vercel and set **Root Directory** to `.` (the repository root). The root `vercel.json` builds the shared protocol workspace before the receiver and publishes `apps/receiver/dist`. The signaling server is not deployed by this configuration and must be hosted separately.
+
 ### 3. Build and install the Android app
 
 Open the repository root in **Android Studio** (or build via Gradle):
