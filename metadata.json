@@ -1,0 +1,6 @@
+{
+  "name": "DroidCast",
+  "description": "Cast your Android screen to your laptop over the local network using MediaProjection and WebRTC.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

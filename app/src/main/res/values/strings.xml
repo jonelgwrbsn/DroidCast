@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">DroidCast</string>
+    <string name="tagline">Cast your Android screen to your laptop.</string>
+    <string name="start_casting">Start Casting</string>
+    <string name="stop_casting">Stop Casting</string>
+    <string name="available_receivers">Available Receivers</string>
+    <string name="receiver_status_ready">Ready</string>
+    <string name="receiver_status_casting">Casting</string>
+    <string name="receiver_status_offline">Offline</string>
+    <string name="manual_connection_title">Enter receiver address</string>
+    <string name="manual_connection_hint">e.g. 192.168.1.50:3000</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="retry">Retry</string>
+    <string name="cancel">Cancel</string>
+    <string name="pairing_code_label">PAIRING CODE</string>
+    <string name="pairing_confirm_instruction">Enter this code in the DroidCast receiver on your laptop to authorize casting.</string>
+    <string name="privacy_notice">When enabled, DroidCast streams eligible Android media audio to the receiver and temporarily mutes the phone's media output. The original volume is restored when casting stops. Some apps block audio capture.</string>
+    <string name="notification_channel_name">Screen Casting</string>
+    <string name="notification_channel_desc">Active DroidCast screen and optional system audio casting session</string>
+    <string name="notification_title">DroidCast</string>
+    <string name="notification_casting_to">Casting screen to %1$s</string>
+    <string name="notification_casting_generic">Casting screen to laptop receiver</string>
+    <string name="audio_available">Audio: streaming</string>
+    <string name="audio_unavailable">Audio: unavailable</string>
+    <string name="video_available">Video: available</string>
+    <string name="quality_label">Stream Quality</string>
+    <string name="discovery_scanning">Scanning local Wi-Fi for receivers…</string>
+    <string name="discovery_empty">No receivers found on local Wi-Fi yet. Start the DroidCast signaling server &amp; receiver on your laptop or enter its address below.</string>
+    <string name="cd_cast_icon">DroidCast icon</string>
+    <string name="cd_receiver_laptop">Laptop receiver</string>
+    <string name="cd_refresh_discovery">Refresh receiver discovery</string>
+    <string name="cd_settings">Cast settings</string>
+</resources>

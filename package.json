@@ -1,0 +1,27 @@
+{
+  "name": "droidcast-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DroidCast — Real Android-to-Laptop WebRTC Screen Casting System",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build:protocol": "npm run build --workspace=@droidcast/protocol",
+    "signaling": "npm run build --workspace=@droidcast/protocol && npm run dev --workspace=@droidcast/signaling",
+    "receiver": "npm run build --workspace=@droidcast/protocol && npm run dev --workspace=@droidcast/receiver",
+    "dev": "npm run build --workspace=@droidcast/protocol && npx concurrently -n SIGNALING,RECEIVER -c cyan,emerald \"npm run dev --workspace=@droidcast/signaling\" \"npm run dev --workspace=@droidcast/receiver\"",
+    "start": "npm run build && npm run start --workspace=@droidcast/signaling",
+    "build": "npm run build --workspace=@droidcast/protocol && npm run build --workspace=@droidcast/signaling && npm run build --workspace=@droidcast/receiver",
+    "typecheck": "npm run typecheck --workspace=@droidcast/protocol && npm run typecheck --workspace=@droidcast/signaling && npm run typecheck --workspace=@droidcast/receiver",
+    "test": "npm test --workspace=@droidcast/protocol && npm test --workspace=@droidcast/signaling"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
