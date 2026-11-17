@@ -90,7 +90,7 @@ Find your laptop's LAN IP address via `http://localhost:3000/info` or scan the *
 
 ### Deploying the Receiver to Vercel
 
-Deploy the Vite receiver from the monorepo with **Root Directory** set to `apps/receiver` and **Include files outside the root directory in the Build Step** enabled. Use `dist` as the output directory. The receiver build runs the shared protocol build automatically.
+Deploy the Vite receiver from the monorepo with **Root Directory** set to `apps/receiver` and **Include files outside the root directory in the Build Step** enabled. Use `dist` as the output directory. The receiver build runs the shared protocol build automatically, and the Vercel rewrite keeps direct routes such as `/install` working.
 
 The `/install` page downloads the Android APK from the latest GitHub Release. The `Publish Android APK` workflow builds and publishes a debug APK when Android app sources change on `main`. These debug builds use temporary CI signing keys, so Android may require uninstalling an older CI build before installing an update.
 
