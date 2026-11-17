@@ -15,7 +15,7 @@
     <string name="cancel">Cancel</string>
     <string name="pairing_code_label">PAIRING CODE</string>
     <string name="pairing_confirm_instruction">Enter this code in the DroidCast receiver on your laptop to authorize casting.</string>
-    <string name="privacy_notice">When enabled, DroidCast streams eligible Android media audio to the receiver and temporarily mutes the phone's media output. The original volume is restored when casting stops. Some apps block audio capture.</string>
+    <string name="privacy_notice">When enabled, DroidCast streams eligible Android media audio to the receiver and temporarily mutes media output on the phone. The original volume is restored when casting stops. Some apps block audio capture.</string>
     <string name="notification_channel_name">Screen Casting</string>
     <string name="notification_channel_desc">Active DroidCast screen and optional system audio casting session</string>
     <string name="notification_title">DroidCast</string>
