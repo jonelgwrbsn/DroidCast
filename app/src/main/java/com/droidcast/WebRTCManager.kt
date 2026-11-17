@@ -745,11 +745,11 @@ class WebRTCManager(
             }
 
             val videoPayloadTypes = mutableSetOf<String>()
-            var inVideoSection = false
+            var inVideoCodecSection = false
             for (line in filteredLines) {
                 if (line.startsWith("m=")) {
-                    inVideoSection = line.startsWith("m=video ")
-                } else if (inVideoSection && line.startsWith("a=rtpmap:")) {
+                    inVideoCodecSection = line.startsWith("m=video ")
+                } else if (inVideoCodecSection && line.startsWith("a=rtpmap:")) {
                     val lower = line.lowercase()
                     if (lower.contains("h264/90000") || lower.contains("vp8/90000") || lower.contains("vp9/90000")) {
                         val pt = line.removePrefix("a=rtpmap:").substringBefore(" ")
