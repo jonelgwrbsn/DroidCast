@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
   AlertTriangle,
@@ -6,46 +6,29 @@ import {
   Check,
   Copy,
   Download,
-  RefreshCw,
   ShieldCheck,
   Smartphone,
 } from 'lucide-react';
 import { getDefaultSignalingUrl } from '../hooks/useSignaling';
 
-interface ApkInfoPayload {
-  available: boolean;
-  filename: string;
-  sizeBytes: number | null;
-  downloadPath: string;
-  installPagePath: string;
-  updatedAt: string | null;
-}
-
-interface ServerInfoResponse {
-  port: number;
-  addresses: string[];
-  wsUrls: string[];
-  receiverUrls?: string[];
-  apk?: ApkInfoPayload;
-}
-
 interface InstallPageProps {
   onNavigateHome: () => void;
 }
 
-function toHttpBase(wsUrl: string): string {
-  try {
-    const parsed = new URL(wsUrl);
-    const proto = parsed.protocol === 'wss:' ? 'https:' : 'http:';
-    return `${proto}//${parsed.host}`;
-  } catch {
-    return window.location.origin;
-  }
-}
+const APK_FILENAME = 'DroidCast.apk';
+const APK_DOWNLOAD_URL =
+  (import.meta.env.VITE_ANDROID_APK_URL as string | undefined)?.trim() ||
+  'https://github.com/jonelgwrbsn/DroidCast/releases/latest/download/DroidCast.apk';
 
-function formatSizeMb(sizeBytes: number | null | undefined): string {
-  if (!sizeBytes || sizeBytes <= 0) return '--';
-  return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+function isLocalHost(hostname: string): boolean {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.endsWith('.local') ||
+    /^10\./.test(hostname) ||
+    /^192\.168\./.test(hostname) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(hostname)
+  );
 }
 
 type DeviceBrandGuide = 'oppo-realme' | 'oneplus' | 'vivo' | 'general';
@@ -107,58 +90,17 @@ const BRAND_GUIDES: BrandGuideContent[] = [
 ];
 
 export function InstallPage({ onNavigateHome }: InstallPageProps) {
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [httpBase, setHttpBase] = useState<string>(() => toHttpBase(getDefaultSignalingUrl()));
-  const [wsUrl, setWsUrl] = useState<string>(() => getDefaultSignalingUrl());
-  const [apkInfo, setApkInfo] = useState<ApkInfoPayload | null>(null);
   const [copiedKey, setCopiedKey] = useState<'download' | 'ws' | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<DeviceBrandGuide>('oppo-realme');
-
-  const loadInstallInfo = useCallback(async () => {
-    setLoading(true);
-    setLoadError(null);
-
-    const defaultWs = getDefaultSignalingUrl();
-    const initialHttpBase = toHttpBase(defaultWs);
-    let resolvedWs = defaultWs;
-    let resolvedHttpBase = initialHttpBase;
-    let resolvedApk: ApkInfoPayload | null = null;
-
-    try {
-      const res = await fetch(`${initialHttpBase}/info`);
-      if (!res.ok) {
-        throw new Error(`Signaling server returned HTTP ${res.status}`);
-      }
-      const info = (await res.json()) as ServerInfoResponse;
-      if (info.wsUrls && info.wsUrls.length > 0) {
-        resolvedWs = info.wsUrls[0];
-        resolvedHttpBase = toHttpBase(resolvedWs);
-      }
-      if (info.apk) {
-        resolvedApk = info.apk;
-      }
-    } catch (err) {
-      setLoadError(
-        err instanceof Error
-          ? `Could not reach signaling server at ${initialHttpBase}.`
-          : 'Could not reach signaling server.'
-      );
-    } finally {
-      setWsUrl(resolvedWs);
-      setHttpBase(resolvedHttpBase);
-      setApkInfo(resolvedApk);
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadInstallInfo();
-  }, [loadInstallInfo]);
-
-  const downloadUrl = `${httpBase}${apkInfo?.downloadPath || '/download/droidcast.apk'}`;
-  const apkFilename = apkInfo?.filename || 'DroidCast.apk';
-  const sizeLabel = formatSizeMb(apkInfo?.sizeBytes);
+  const wsUrl = getDefaultSignalingUrl();
+  const configuredWsUrl = (import.meta.env.VITE_SIGNALING_URL as string | undefined)?.trim();
+  const savedWsUrl = window.localStorage.getItem('droidcast_signaling_url')?.trim();
+  const hasSignalingEndpoint = Boolean(
+    configuredWsUrl ||
+      savedWsUrl ||
+      window.location.port ||
+      isLocalHost(window.location.hostname)
+  );
 
   const handleCopy = async (key: 'download' | 'ws', value: string) => {
     try {
@@ -182,16 +124,6 @@ export function InstallPage({ onNavigateHome }: InstallPageProps) {
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back to Receiver</span>
           </button>
-
-          <button
-            type="button"
-            onClick={() => void loadInstallInfo()}
-            disabled={loading}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-slate-800 bg-[#10141D] px-3.5 py-2 text-xs font-medium text-slate-300 transition hover:border-slate-700 hover:text-white disabled:opacity-50"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
-          </button>
         </div>
 
         <section className="install-card rounded-2xl border border-slate-800/90 bg-[#10141D] shadow-2xl">
@@ -199,7 +131,7 @@ export function InstallPage({ onNavigateHome }: InstallPageProps) {
             <div className="min-w-0 space-y-5">
               <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-xs font-semibold text-teal-300">
                 <Smartphone className="h-3.5 w-3.5" />
-                <span>Android Sender · Local Wi-Fi Installer</span>
+                <span>Android Sender · Direct APK Download</span>
               </div>
 
               <div>
@@ -207,7 +139,7 @@ export function InstallPage({ onNavigateHome }: InstallPageProps) {
                   Install DroidCast on Android
                 </h1>
                 <p className="install-hero-subtitle mt-2 text-slate-400">
-                  Download the Android APK directly to your phone over local Wi-Fi without a USB cable.
+                  Download the Android APK from GitHub Releases and install it without a USB cable.
                 </p>
               </div>
 
@@ -216,42 +148,29 @@ export function InstallPage({ onNavigateHome }: InstallPageProps) {
                   <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
                     Package File
                   </div>
-                  <div className="mt-1 text-sm font-semibold text-slate-100">{apkFilename}</div>
+                  <div className="mt-1 text-sm font-semibold text-slate-100">{APK_FILENAME}</div>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-[#0D1119] px-3.5 py-2.5">
                   <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
                     Size &amp; Compatibility
                   </div>
                   <div className="mt-1 text-sm font-semibold text-slate-100 tabular-nums">
-                    {sizeLabel} · Android 7.0+
+                    Android 7.0+
                   </div>
                 </div>
               </div>
 
-              {loadError && (
-                <div className="install-guide-detail rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-rose-200">
-                  {loadError} Start the signaling host (<code className="font-mono">npm run signaling</code>) and tap Refresh.
-                </div>
-              )}
-
-              {apkInfo?.available ? (
-                <a
-                  href={downloadUrl}
-                  download={apkFilename}
-                  className="inline-flex min-h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-teal-500/15 transition hover:bg-teal-400"
-                >
-                  <Download className="h-4 w-4 shrink-0" />
-                  <span>
-                    Download {apkFilename} ({sizeLabel})
-                  </span>
-                </a>
-              ) : (
-                <div className="install-guide-detail rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-amber-200">
-                  {loading
-                    ? 'Checking local APK build availability…'
-                    : 'APK not found on the signaling host yet. Build app-debug.apk (gradle assembleDebug) and refresh.'}
-                </div>
-              )}
+              <a
+                href={APK_DOWNLOAD_URL}
+                download={APK_FILENAME}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-teal-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-teal-500/15 transition hover:bg-teal-400"
+              >
+                <Download className="h-4 w-4 shrink-0" />
+                <span>Download {APK_FILENAME}</span>
+              </a>
+              <p className="text-xs text-slate-400">
+                If the download is not available yet, the Android build may still be publishing. Please try again shortly.
+              </p>
 
               <div className="space-y-1.5">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
@@ -259,11 +178,11 @@ export function InstallPage({ onNavigateHome }: InstallPageProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <code className="install-code-pill min-w-0 flex-1 truncate rounded-lg border border-slate-800 bg-[#090B10] px-3 py-2 font-mono text-teal-300">
-                    {downloadUrl}
+                    {APK_DOWNLOAD_URL}
                   </code>
                   <button
                     type="button"
-                    onClick={() => void handleCopy('download', downloadUrl)}
+                    onClick={() => void handleCopy('download', APK_DOWNLOAD_URL)}
                     className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg border border-slate-800 bg-[#141925] px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-slate-700 hover:text-white"
                   >
                     {copiedKey === 'download' ? (
@@ -283,7 +202,7 @@ export function InstallPage({ onNavigateHome }: InstallPageProps) {
                 className="install-qr-frame rounded-xl border border-slate-800 bg-[#090B10] p-2"
               >
                 <QRCodeSVG
-                  value={downloadUrl}
+                    value={APK_DOWNLOAD_URL}
                   size={176}
                   bgColor="#090B10"
                   fgColor="#F1F5F9"
@@ -293,7 +212,7 @@ export function InstallPage({ onNavigateHome }: InstallPageProps) {
               </div>
               <div className="mt-3 text-xs font-semibold text-slate-200">Scan to Download APK</div>
               <p className="install-guide-detail mt-1 max-w-[210px] text-slate-400">
-                Scan with your phone camera to download {apkFilename} directly over local Wi-Fi.
+                Scan with your phone camera to download {APK_FILENAME}.
               </p>
             </div>
           </div>
@@ -318,8 +237,7 @@ export function InstallPage({ onNavigateHome }: InstallPageProps) {
               <div className="min-w-0">
                 <div className="install-guide-text font-medium text-slate-100">Download the full APK first</div>
                 <p className="install-guide-detail mt-0.5 text-slate-400">
-                  Tap <span className="text-slate-200">Download {apkFilename}</span> above and wait until the entire{' '}
-                  <span className="font-mono text-slate-200">{sizeLabel}</span> transfer completes before opening the file.
+                  Tap <span className="text-slate-200">Download {APK_FILENAME}</span> above and wait until the download finishes before opening the file.
                 </p>
               </div>
             </li>
@@ -357,25 +275,36 @@ export function InstallPage({ onNavigateHome }: InstallPageProps) {
               <div className="min-w-0 flex-1">
                 <div className="install-guide-text font-medium text-slate-100">Open DroidCast &amp; connect over Wi-Fi</div>
                 <p className="install-guide-detail mt-0.5 text-slate-400">
-                  Launch DroidCast on your phone, allow notification/audio permissions when asked, and connect to this receiver signaling URL:
+                  Launch DroidCast on your phone and allow notification/audio permissions when asked.
                 </p>
-                <div className="mt-2 flex items-center gap-2">
-                  <code className="install-code-pill min-w-0 flex-1 truncate rounded-lg border border-slate-800 bg-[#090B10] px-3 py-2 font-mono text-teal-300">
-                    {wsUrl}
-                  </code>
-                  <button
-                    type="button"
-                    onClick={() => void handleCopy('ws', wsUrl)}
-                    className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg border border-slate-800 bg-[#141925] px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-slate-700 hover:text-white"
-                  >
-                    {copiedKey === 'ws' ? (
-                      <Check className="h-3.5 w-3.5 text-teal-400" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
-                    <span>{copiedKey === 'ws' ? 'Copied' : 'Copy'}</span>
-                  </button>
-                </div>
+                {hasSignalingEndpoint ? (
+                  <>
+                    <p className="install-guide-detail mt-2 text-slate-400">
+                      Connect both devices to the same Wi-Fi network and use this signaling URL:
+                    </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <code className="install-code-pill min-w-0 flex-1 truncate rounded-lg border border-slate-800 bg-[#090B10] px-3 py-2 font-mono text-teal-300">
+                        {wsUrl}
+                      </code>
+                      <button
+                        type="button"
+                        onClick={() => void handleCopy('ws', wsUrl)}
+                        className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg border border-slate-800 bg-[#141925] px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-slate-700 hover:text-white"
+                      >
+                        {copiedKey === 'ws' ? (
+                          <Check className="h-3.5 w-3.5 text-teal-400" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                        <span>{copiedKey === 'ws' ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="install-guide-detail mt-2 rounded-lg border border-amber-500/35 bg-amber-500/10 p-3 text-amber-200">
+                    This site can display the receiver and download the APK, but casting requires a separately hosted signaling server. Configure VITE_SIGNALING_URL with its secure WebSocket URL to enable casting.
+                  </p>
+                )}
               </div>
             </li>
           </ol>
@@ -447,7 +376,7 @@ export function InstallPage({ onNavigateHome }: InstallPageProps) {
                 <span className="font-medium text-slate-100">&ldquo;App not installed / conflicts with existing package&rdquo;</span>: Uninstall any older DroidCast build first, then install this APK.
               </li>
               <li>
-                <span className="font-medium text-slate-100">&ldquo;Install&rdquo; button won&apos;t tap</span>: Disable screen-dimming/floating overlay apps or open <span className="font-mono text-slate-200">{apkFilename}</span> from your phone&apos;s <span className="text-slate-100">Files</span> app.
+                <span className="font-medium text-slate-100">&ldquo;Install&rdquo; button won&apos;t tap</span>: Disable screen-dimming/floating overlay apps or open <span className="font-mono text-slate-200">{APK_FILENAME}</span> from your phone&apos;s <span className="text-slate-100">Files</span> app.
               </li>
             </ul>
           </div>

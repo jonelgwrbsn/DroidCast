@@ -9,4 +9,6 @@ The receiver is a zero-install React + TypeScript + Vite web application designe
 - **Cinema Mode**: Uses the native browser Fullscreen API (`F` shortcut or double-click or fullscreen button), hides controls automatically after inactivity, and reveals them on mouse movement.
 - **Quality & Adaptive Telemetry**: Supports `Adaptive` (dynamic 5-tier resolution/FPS & bitrate scaling from 1080p60 down to 360p24 via WebRTC `droidcast-adaptive` DataChannel feedback and dynamic jitter-buffer sizing) as well as fixed `720p · 30 FPS`, `1080p · 30 FPS`, and `1080p · 60 FPS` presets, with live `RTCStatsReport` metrics (resolution, FPS, Rx/target bitrate, RTT, windowed packet loss, jitter, dropped frames, codec) in the **Connection Details** panel.
 - **Auto-Reconnect**: Recovers cleanly from transient signaling WebSocket drops.
-- **Local Wi-Fi APK Installer (`/install`)**: Dedicated `/install` route displaying a scannable QR code, live APK download button (`/download/droidcast.apk`), and Oppo/Realme/OnePlus/Vivo sideloading instructions.
+- **Android APK Installer (`/install`)**: Dedicated `/install` route with a QR code and direct download from the latest GitHub Release, plus Oppo/Realme/OnePlus/Vivo sideloading instructions. It does not depend on the signaling server.
+
+The Vercel deployment serves the receiver UI and APK installer. Casting requires a separately hosted signaling server configured through `VITE_SIGNALING_URL`.
